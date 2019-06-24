@@ -11,14 +11,13 @@ logger.setLevel(logging.INFO)
 ec2_client = boto3.client('ec2')
 autoscaling_client = boto3.client('autoscaling')
 
-OLDER_THAN_DAYS = os.environ['OLDER_THAN_DAYS']
-
-launch_configurations_dump = autoscaling_client.describe_launch_configurations()
-launch_templates_dump = ec2_client.describe_launch_templates()
-ami_info_dump = ec2_client.describe_images( Owners = ['self'] )
+OLDER_THAN_DAYS = int(os.environ['OLDER_THAN_DAYS'])
 
 def handler(event, context):
-    response = ami_list(ami_info_dump)
+    response = ami_list(
+        ec2_client.describe_images(
+            Owners = ['self'])
+        )
 	#Response contains AMI ID's and there corresponding Snapshots which are removed
     return response
 
@@ -26,17 +25,17 @@ def ami_list(ami_list):
     response = []
     for items in ami_list['Images']:
         is_expired = expire(items['ImageId'], items['CreationDate'])
-        if is_expired != None : 
+        if is_expired: 
             response.append(is_expired)
     return response	
 	
 	    
 def expire(ami_id, creation_date):
     ami_ids = []
-    date_now = datetime.datetime.now().date()
+    date_now = datetime.datetime.utcnow().date()
     creation_date_only = datetime.datetime.strptime(creation_date, "%Y-%m-%dT%H:%M:%S.%fZ").date()
 
-    if (date_now - creation_date_only).days > int(OLDER_THAN_DAYS):
+    if (date_now - creation_date_only).days > OLDER_THAN_DAYS:
         if(check_launch_configurations(ami_id) and check_launch_templates(ami_id)):
             logger.info('Will Deregister AMI {}'.format(ami_id))
             ami_ids.append(ami_id)
@@ -44,14 +43,16 @@ def expire(ami_id, creation_date):
             return ami_ids, deregister_data
         
 def check_launch_configurations(ami_id):
-    for items in launch_configurations_dump['LaunchConfigurations']:
+    launch_configurations = autoscaling_client.describe_launch_configurations()
+    for items in launch_configurations['LaunchConfigurations']:
         if ami_id == items['ImageId']:
             logger.info("{} Getting used in launch configurations, Will not be removed.".format(ami_id))
             return False
     return True
     
 def check_launch_templates(ami_id):
-    for items in launch_templates_dump['LaunchTemplates']:
+    launch_templates = ec2_client.describe_launch_templates()
+    for items in launch_templates['LaunchTemplates']:
 	    if not (check_launch_template_versions(items['LaunchTemplateId'], ami_id)):
 		    logger.info("{} Getting used in one or more launch template versions, Will not be removed.".format(ami_id))
 		    return False
