@@ -23,8 +23,17 @@ OLDER_THAN_DAYS - **REQUIRED**
 
 ## Response Syntax
 [
-    [
-        ami-02c0104a1da586915,
-        snap-07bd03b0d5b52c848
-    ],
+  {
+    "ami_id": "ami-028b77e3194f87c82",
+    "snapshot_ids": [
+      "snap-00aebf580f654890d",
+	  "snap-093f9c7abba4f0d94"
+    ]
+  },
+  {
+    "ami_id": "ami-05a0b31dbe028babc",
+    "snapshot_ids": [
+      "snap-093f9c7abba4f0d94"
+    ]
+  }
 ]
