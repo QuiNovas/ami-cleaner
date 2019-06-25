@@ -13,7 +13,7 @@ It deletes the AMI only if:
 
 - Not getting used in any of the Launch Template versions 
 
-- Has at least one latest copy.
+**Note:** Set OLDER_THAN_DAYS  more than your usual packer/ami build schedule interval days, if not ami-cleaner might deregister an ami which is old enough without the latest builds of it.
 
 **Environment variables**
 OLDER_THAN_DAYS - *REQUIRED*
