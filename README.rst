@@ -5,6 +5,8 @@ Lambda function that can be scheduled to clean up old AMI's.
 
 This function Deregisters the Private AMIs which are older than days specified by the user and deletes the corresponding EBS Snapshots.
 
+**Note:** This code depends on Naming conventions of the AMI's, i.e ami builds should be having an 14 char isotime postfix e.g amzn-ami-minimal-hvm-managed-20200101000124
+
 It deletes the AMI only if:
 
 - Not a Public AMI
@@ -12,6 +14,8 @@ It deletes the AMI only if:
 - Not getting used in any of Autoscaling Launch Configurations. 
 
 - Not getting used in any of the Launch Template versions 
+
+- Atleast one more build exists which is not expired
 
 **Note:** Set OLDER_THAN_DAYS  more than your usual packer/ami build schedule interval days, if not ami-cleaner might deregister an ami which is old enough without the latest builds of it.
 
